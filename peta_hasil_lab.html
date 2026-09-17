@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Peta Hasil Penelitian Air Bersih TPA Tamangapa</title>
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            background-color: #f4f5f7;
+            color: #172b4d;
+            padding: 20px 12px;
+            display: flex;
+            justify-content: center;
+        }
+        .container {
+            width: 100%;
+            max-width: 560px;
+            background: #ffffff;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            padding: 20px 16px;
+        }
+        h2 {
+            font-size: 18px;
+            font-weight: 700;
+            color: #111827;
+            margin-bottom: 6px;
+            line-height: 1.3;
+        }
+        p.subtitle {
+            font-size: 12px;
+            color: #6b7280;
+            margin-bottom: 16px;
+            line-height: 1.4;
+        }
+        #map {
+            height: 380px;
+            width: 100%;
+            border-radius: 12px;
+            margin-bottom: 16px;
+            z-index: 1;
+            border: 1px solid #e5e7eb;
+        }
+        /* Style Popup */
+        .leaflet-popup-content-wrapper {
+            border-radius: 12px;
+            padding: 6px;
+        }
+        .popup-card {
+            max-width: 260px;
+        }
+        .popup-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: #991b1b;
+            margin-bottom: 4px;
+        }
+        .popup-location {
+            font-size: 11px;
+            color: #374151;
+            margin-bottom: 4px;
+            font-weight: 600;
+        }
+        .popup-coords {
+            font-size: 10px;
+            color: #4b5563;
+            margin-bottom: 8px;
+            font-family: monospace;
+            background: #f3f4f6;
+            padding: 2px 6px;
+            border-radius: 4px;
+            display: inline-block;
+        }
+        .popup-summary {
+            font-size: 11px;
+            color: #1f2937;
+            line-height: 1.4;
+            background: #fef2f2;
+            border-left: 3px solid #dc2626;
+            padding: 6px 8px;
+            border-radius: 4px;
+            margin-bottom: 10px;
+        }
+        /* Thumbnail Gambar dalam Popup */
+        .popup-img-thumb {
+            width: 100%;
+            height: 130px;
+            object-fit: cover;
+            border-radius: 8px;
+            cursor: pointer;
+            border: 1px solid #d1d5db;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .popup-img-thumb:hover {
+            transform: scale(1.02);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+        }
+        .click-hint {
+            font-size: 10px;
+            color: #2563eb;
+            text-align: center;
+            margin-top: 4px;
+            font-weight: 600;
+        }
+        /* Modal Lightbox Gambar */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.85);
+            z-index: 9999;
+            justify-content: center;
+            align-items: center;
+            padding: 16px;
+        }
+        .modal-overlay.active {
+            display: flex;
+        }
+        .modal-content {
+            max-width: 95%;
+            max-height: 90vh;
+            border-radius: 8px;
+            background: #fff;
+            padding: 8px;
+            position: relative;
+            box-shadow: 0 4px 25px rgba(0,0,0,0.5);
+        }
+        .modal-img {
+            max-width: 100%;
+            max-height: 80vh;
+            display: block;
+            border-radius: 4px;
+        }
+        .close-modal {
+            position: absolute;
+            top: -12px;
+            right: -12px;
+            background: #dc2626;
+            color: #fff;
+            border: none;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+        }
+        /* Custom Red Water Marker */
+        .water-marker {
+            background-color: #dc2626;
+            border: 2px solid #ffffff;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+        }
+        .water-marker svg {
+            width: 14px;
+            height: 14px;
+            fill: #ffffff;
+        }
+        .footer-credit {
+            margin-top: 14px;
+            padding-top: 10px;
+            border-top: 1px solid #f3f4f6;
+            text-align: center;
+            font-size: 11px;
+            color: #6b7280;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Titik Hasil Penelitian Air Bersih TPA Tamangapa</h2>
+    <p class="subtitle">Klik penanda titik merah untuk melihat detail ringkasan dan lampiran berkas laporan hasil uji laboratorium.</p>
+
+    <!-- Map Area -->
+    <div id="map"></div>
+
+    <div class="footer-credit">
+        Peta Pemantauan Lingkungan &bull; Sumber Data: <strong>PT Global Environment Laboratory (015/LHU/AB/GEL/IV/2026)</strong>
+    </div>
+</div>
+
+<!-- Modal Pop-Up Gambar Laporan Lab -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModal()">
+    <div class="modal-content" onclick="event.stopPropagation()">
+        <button class="close-modal" onclick="closeModal()">✕</button>
+        <img src="" class="modal-img" id="modalImg" alt="Laporan Hasil Uji Lab">
+    </div>
+</div>
+
+<!-- Leaflet JS -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script>
+    // Inisialisasi Peta
+    const map = L.map('map').setView([-5.174407, 119.490182], 16);
+
+    // Citra Satelit Jernih (Esri World Imagery)
+    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+        attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community',
+        maxZoom: 19
+    }).addTo(map);
+
+    // Label Jalan/Areal Peta Satelit
+    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}', {
+        attribution: ''
+    }).addTo(map);
+
+    // Marker Merah Khusus
+    const redMarkerIcon = L.divIcon({
+        className: 'custom-div-icon',
+        html: `
+            <div class="water-marker" style="width: 28px; height: 28px;">
+                <svg viewBox="0 0 24 24">
+                    <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/>
+                </svg>
+            </div>
+        `,
+        iconSize: [28, 28],
+        iconAnchor: [14, 14],
+        popupAnchor: [0, -14]
+    });
+
+    // Base64 Gambar Dokumen
+    const imgSampel1 = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAABdMAAAQfCAIAAAB3V+cQAABcQWNhQlgAAFxBanVtYgAAAB5qdW1kYzJwYQARABCAAACqADibcQNjMnBhAAAAXBtqdW1iAAAAR2p1bWRjMm1hABEAEIAAAKoAOJtxA3VybjpjMnBhOmU4NjcwNWE2LWJiN2EtNDAzMy1iYmExLTNlODI1ZjVkNTIyYwAAAAxXanVtYgAAAClqdW1kYzJhcwARABCAAACqADibcQNjMnBhLmFzc2VydGlvbnMAAAAJ0Wp1bWIAAAA7anVtZEDLDDK7ikidpwsq1vR/Q2kTYzJwYS5pY29uAAAAABhjMnNo0l1gXnwQgrdbfbSDFiPV3AAAABdiZmRiAGltYWdlL3N2Zyt4bWwAAAAJd2JpZGI8c3ZnIHdpZHRoPSI3MTYiIGhlaWdodD0iNzE2IiB2aWV3Qm94=";
+    const imgSampel2 = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAABdMAAAQfCAIAAAB3V+cQAABcQWNhQlgAAFxBanVtYgAAAB5qdW1kYzJwYQARABCAAACqADibcQNjMnBhAAAAXBtqdW1iAAAAR2p1bWRjMm1hABEAEIAAAKoAOJtxA3VybjpjMnBhOmI0ZjdiMmJjLTVmYzYtNDg1Yi04MzFiLTFlMzAwZDM1MzA3OAAAAAxXanVtYgAAAClqdW1kYzJhcwARABCAAACqADibcQNjMnBhLmFzc2VydGlvbnMAAAAJ0Wp1bWIAAAA7anVtZEDLDDK7ikidpwsq1vR/Q2kTYzJwYS5pY29uAAAAABhjMnNo0l1gXnwQgrdbfbSDFiPV3AAAABdiZmRiAGltYWdlL3N2Zyt4bWwAAAAJd2JpZGI8c3ZnIHdpZHRoPSI3MTYiIGhlaWdodD0iNzE2IiB2aWV3Qm94=";
+
+    // Data Titik Penelitian
+    const locations = [
+        {
+            title: "Sampel 1 Air Bersih",
+            sampleNo: "020/AB/IV/2026",
+            locationName: "Sumur Area TPA Tamangapa (Dekat Bengkel)",
+            coords: [-5.175562, 119.488807],
+            coordStr: "S: 05° 10' 32,022\" | E: 119° 29' 19,704\"",
+            description: "Hasil penelitian menunjukkan kandungan mikrobiologi E. Coli mencapai 89, melampaui baku mutu yang dipersyaratkan. Kekeruhan (35,1 NTU) dan bau (berbau) juga melampaui baku mutu.",
+            imgUrl: imgSampel1 
+        },
+        {
+            title: "Sampel 2 Air Bersih",
+            sampleNo: "019/AB/IV/2026",
+            locationName: "Sumur Pada Pemukiman Penduduk 2 (Jalan Masuk Kolam Lindi)",
+            coords: [-5.173253, 119.491558],
+            coordStr: "S: 05° 10' 23,712\" | E: 119° 29' 29,61\"",
+            description: "Hasil penelitian menunjukkan E. Coli mencapai 59, melampaui baku mutu yang dipersyaratkan.",
+            imgUrl: imgSampel2
+        }
+    ];
+
+    // Rendering Marker ke Peta
+    locations.forEach((loc, idx) => {
+        const popupContent = `
+            <div class="popup-card">
+                <div class="popup-title">${loc.title}</div>
+                <div class="popup-location">📍 ${loc.locationName}</div>
+                <div class="popup-coords">${loc.coordStr}</div>
+                <div class="popup-summary">${loc.description}</div>
+                <img src="${loc.imgUrl}" class="popup-img-thumb" id="img-thumb-${idx}" onclick="openModal('${loc.imgUrl}')" alt="Dokumen Laporan Lab">
+                <div class="click-hint">🔍 Klik gambar untuk memperbesar laporan</div>
+            </div>
+        `;
+
+        L.marker(loc.coords, { icon: redMarkerIcon })
+            .addTo(map)
+            .bindPopup(popupContent);
+    });
+
+    // Fungsi Pop-Up Modal Gambar Full
+    function openModal(imgSrc) {
+        document.getElementById('modalImg').src = imgSrc;
+        document.getElementById('modalOverlay').classList.add('active');
+    }
+
+    function closeModal() {
+        document.getElementById('modalOverlay').classList.remove('active');
+    }
+</script>
+
+</body>
+</html>

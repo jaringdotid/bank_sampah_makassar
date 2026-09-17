@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cari TPS3R di Makassar</title>
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            background-color: #f4f5f7;
+            color: #172b4d;
+            padding: 20px 12px;
+            display: flex;
+            justify-content: center;
+        }
+        .container {
+            width: 100%;
+            max-width: 480px;
+            background: #ffffff;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+            padding: 20px 16px;
+        }
+        h2 {
+            font-size: 20px;
+            font-weight: 700;
+            color: #000000;
+            margin-bottom: 6px;
+            letter-spacing: -0.3px;
+        }
+        p.subtitle {
+            font-size: 13px;
+            color: #6b7280;
+            margin-bottom: 18px;
+            line-height: 1.4;
+        }
+        /* Tab Navigation UI */
+        .tab-wrapper {
+            background: #f3f4f6;
+            padding: 4px;
+            border-radius: 10px;
+            display: flex;
+            gap: 4px;
+            margin-bottom: 14px;
+        }
+        .tab-btn {
+            flex: 1;
+            padding: 9px 12px;
+            border: none;
+            background: transparent;
+            font-size: 14px;
+            font-weight: 600;
+            color: #4b5563;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .tab-btn.active {
+            background: #ffffff;
+            color: #991b1b;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        /* Filter Controls */
+        .tab-content {
+            display: none;
+            margin-bottom: 14px;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .select-wrapper {
+            position: relative;
+            margin-bottom: 10px;
+        }
+        select, input[type="text"] {
+            width: 100%;
+            padding: 11px 14px;
+            border: 1px solid #e5e7eb;
+            border-radius: 10px;
+            font-size: 14px;
+            color: #374151;
+            outline: none;
+            background-color: #ffffff;
+            appearance: none;
+            -webkit-appearance: none;
+            transition: border-color 0.2s;
+        }
+        input[type="text"]::placeholder {
+            color: #9ca3af;
+        }
+        select:focus, input[type="text"]:focus {
+            border-color: #991b1b;
+        }
+        .select-arrow {
+            position: absolute;
+            right: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            pointer-events: none;
+            color: #6b7280;
+            font-size: 10px;
+        }
+        /* Leaflet Map Styling */
+        #map {
+            height: 240px;
+            width: 100%;
+            border-radius: 12px;
+            margin-bottom: 22px;
+            z-index: 1;
+            border: 1px solid #f3f4f6;
+        }
+        /* List Section */
+        .list-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #111827;
+            margin-bottom: 12px;
+        }
+        .table-header {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            font-weight: 700;
+            color: #374151;
+            border-bottom: 2px solid #991b1b;
+            padding-bottom: 8px;
+            margin-bottom: 8px;
+            letter-spacing: 0.5px;
+        }
+        .tps-scroll-container {
+            max-height: 280px;
+            overflow-y: auto;
+        }
+        .tps-row {
+            display: flex;
+            align-items: flex-start;
+            padding: 12px 0;
+            border-bottom: 1px solid #f3f4f6;
+        }
+        .tps-idx {
+            width: 24px;
+            font-weight: 700;
+            color: #2563eb;
+            font-size: 13px;
+            padding-top: 1px;
+        }
+        .tps-info {
+            flex: 1;
+            padding-right: 8px;
+        }
+        .tps-name {
+            font-weight: 700;
+            font-size: 13px;
+            color: #111827;
+            text-transform: uppercase;
+        }
+        .tps-address {
+            font-size: 11px;
+            color: #6b7280;
+            margin-top: 2px;
+        }
+        .tps-loc {
+            font-size: 11px;
+            color: #6b7280;
+        }
+        .btn-wa {
+            background-color: #b91c1c;
+            color: #ffffff;
+            text-decoration: none;
+            padding: 6px 10px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            white-space: nowrap;
+            display: inline-block;
+            transition: background-color 0.2s;
+        }
+        .btn-wa:hover {
+            background-color: #991b1b;
+        }
+        /* Custom Icon Recycle Red Marker */
+        .recycle-marker {
+            background-color: #b91c1c;
+            border: 2px solid #ffffff;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.25);
+        }
+        .recycle-marker svg {
+            width: 12px;
+            height: 12px;
+            fill: #ffffff;
+        }
+        /* Footer Credit Style */
+        .footer-credit {
+            margin-top: 20px;
+            padding-top: 12px;
+            border-top: 1px solid #f3f4f6;
+            text-align: center;
+            font-size: 11px;
+            color: #6b7280;
+            line-height: 1.5;
+        }
+        .footer-credit strong {
+            color: #374151;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Cari TPS3R di Makassar</h2>
+    <p class="subtitle">Gunakan tab di bawah untuk menelusuri berdasarkan wilayah atau melakukan pencarian nama</p>
+
+    <!-- Navigation Tabs -->
+    <div class="tab-wrapper">
+        <button class="tab-btn active" id="btn-wilayah" onclick="switchTab('wilayah')">Wilayah</button>
+        <button class="tab-btn" id="btn-nama" onclick="switchTab('nama')">Nama TPS3R</button>
+    </div>
+
+    <!-- Filter Wilayah -->
+    <div id="tab-wilayah" class="tab-content active">
+        <div class="select-wrapper">
+            <select id="select-kecamatan" onchange="filterData()">
+                <option value="">Pilih Kecamatan</option>
+            </select>
+            <span class="select-arrow">▲▼</span>
+        </div>
+        <div class="select-wrapper">
+            <select id="select-kelurahan" onchange="filterData()">
+                <option value="">Pilih Kelurahan</option>
+            </select>
+            <span class="select-arrow">▲▼</span>
+        </div>
+    </div>
+
+    <!-- Filter Nama TPS3R -->
+    <div id="tab-nama" class="tab-content">
+        <input type="text" id="input-search" placeholder="Cari Nama TPS3R..." oninput="filterData()">
+    </div>
+
+    <!-- Map Element -->
+    <div id="map"></div>
+
+    <!-- List Section -->
+    <div class="list-title">List TPS3R</div>
+    <div class="table-header">
+        <div style="width: 24px;">#</div>
+        <div style="flex:1;">TPS3R</div>
+        <div>KONTAK</div>
+    </div>
+    <div id="tps-container" class="tps-scroll-container"></div>
+
+    <!-- Footer Credit Section -->
+    <div class="footer-credit">
+        Tampilan UI/UX ini menggunakan basis data <strong>Aplikasi Lontara Plus</strong>
+    </div>
+</div>
+
+<!-- Leaflet JS -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+    // Data 13 TPS3R Makassar dengan Koordinat Terverifikasi
+    const dataTPS = [
+        { id: 1, name: "UNTIA", address: "JL. SALODONG", kec: "Biringkanaya", kel: "Untia", lat: -5.0921, lon: 119.4678, phone: "81141100777" },
+        { id: 2, name: "DARUL AMAN", address: "Jl. Kha, Jabbar Ashiri 1", kec: "Biringkanaya", kel: "Pai", lat: -5.1189, lon: 119.4321, phone: "81141100777" },
+        { id: 3, name: "PANAMBUNGAN", address: "JL. RAJAWALI LR. 13 B", kec: "Mariso", kel: "Panambungan", lat: -5.1554, lon: 119.4087, phone: "81355023564" },
+        { id: 4, name: "NIPA NIPA", address: "PER. Pemda Manggala", kec: "Manggala", kel: "Manggala", lat: -5.1687, lon: 119.4912, phone: "81141100777" },
+        { id: 5, name: "PACERAKANG", address: "JL. Keberkahan 1", kec: "Biringkanaya", kel: "Pacerakkang", lat: -5.1045, lon: 119.5123, phone: "82349909168" },
+        { id: 6, name: "BINA WARGA", address: "Jl. Pahlawan (Perkuburan Bulurokeng)", kec: "Biringkanaya", kel: "Bulurokeng", lat: -5.1723, lon: 119.4456, phone: "81141100777" },
+        { id: 7, name: "TAMALANREA", address: "Jl. Tamalanrea Raya", kec: "Tamalanrea", kel: "Tamalanrea", lat: -5.1298, lon: 119.4890, phone: "81141100777" },
+        { id: 8, name: "SAMBUNG JAWA", address: "Jl. Tanjung Alang", kec: "Mamajang", kel: "Sambung jawa", lat: -5.1612, lon: 119.4198, phone: "81141100777" },
+        { id: 9, name: "BARANG LOMPO", address: "Pulau Barang Lompo", kec: "Kep. Sangkarrang", kel: "Barrang lompo", lat: -5.0464, lon: 119.3284, phone: "81141100777" },
+        { id: 10, name: "TPA TAMANGAPA", address: "Jl. Tamangapa Raya", kec: "Manggala", kel: "Tamangapa", lat: -5.1756, lon: 119.4987, phone: "81141100777" },
+        { id: 11, name: "KODINGARENG", address: "PULAU KODINGARENG", kec: "Kep. Sangkarrang", kel: "Kodingareng", lat: -5.1489, lon: 119.2638, phone: "81141100777" },
+        { id: 12, name: "KSM RUSUNAWA MARISO", address: "Jl. Rajawali Lr. 13", kec: "Mariso", kel: "Panambungan", lat: -5.1589, lon: 119.4056, phone: "82192282299" },
+        { id: 13, name: "TPS3R KAREBOSI", address: "Jl. Ra Kartini (Kanre Rong)", kec: "Ujung Pandang", kel: "Baru", lat: -5.1345, lon: 119.4123, phone: "81242893633" }
+    ];
+
+    let currentTab = 'wilayah';
+    let map;
+    let markersGroup = L.layerGroup();
+
+    // Inisialisasi Peta Leaflet
+    function initMap() {
+        map = L.map('map').setView([-5.14766, 119.43273], 11);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap'
+        }).addTo(map);
+        markersGroup.addTo(map);
+    }
+
+    // Inisialisasi Dropdown Wilayah
+    function initDropdowns() {
+        const kecSelect = document.getElementById('select-kecamatan');
+        const kecSet = new Set(dataTPS.map(item => item.kec).filter(Boolean));
+
+        kecSet.forEach(kec => {
+            let opt = document.createElement('option');
+            opt.value = kec;
+            opt.textContent = kec;
+            kecSelect.appendChild(opt);
+        });
+
+        updateKelurahanDropdown();
+    }
+
+    function updateKelurahanDropdown() {
+        const kecVal = document.getElementById('select-kecamatan').value;
+        const kelSelect = document.getElementById('select-kelurahan');
+        kelSelect.innerHTML = '<option value="">Pilih Kelurahan</option>';
+
+        let filtered = dataTPS;
+        if (kecVal) {
+            filtered = dataTPS.filter(item => item.kec === kecVal);
+        }
+
+        const kelSet = new Set(filtered.map(item => item.kel).filter(Boolean));
+        kelSet.forEach(kel => {
+            let opt = document.createElement('option');
+            opt.value = kel;
+            opt.textContent = kel;
+            kelSelect.appendChild(opt);
+        });
+    }
+
+    // Tab Switching
+    function switchTab(tab) {
+        currentTab = tab;
+        document.getElementById('btn-wilayah').classList.toggle('active', tab === 'wilayah');
+        document.getElementById('btn-nama').classList.toggle('active', tab === 'nama');
+        document.getElementById('tab-wilayah').classList.toggle('active', tab === 'wilayah');
+        document.getElementById('tab-nama').classList.toggle('active', tab === 'nama');
+        filterData();
+    }
+
+    // Custom Recycle Marker Red Icon
+    const customIcon = L.divIcon({
+        className: 'recycle-marker',
+        html: `<svg viewBox="0 0 24 24"><path d="M7 19l-4-4 4-4v3h5v2H7v3zm10-14l4 4-4 4V10h-5V8h5V5zm-6 9.5l-1.4 1.4L4.8 11.1l4.8-4.8L11 7.7l-3.4 3.4 3.4 3.4z"/></svg>`,
+        iconSize: [22, 22],
+        iconAnchor: [11, 11]
+    });
+
+    // Filter & Render
+    function filterData() {
+        let list = [...dataTPS];
+
+        if (currentTab === 'wilayah') {
+            const kecVal = document.getElementById('select-kecamatan').value;
+            const kelVal = document.getElementById('select-kelurahan').value;
+            if (kecVal) list = list.filter(item => item.kec === kecVal);
+            if (kelVal) list = list.filter(item => item.kel === kelVal);
+        } else {
+            const searchVal = document.getElementById('input-search').value.toLowerCase();
+            if (searchVal) list = list.filter(item => item.name.toLowerCase().includes(searchVal));
+        }
+
+        renderUI(list);
+    }
+
+    function renderUI(data) {
+        const container = document.getElementById('tps-container');
+        container.innerHTML = '';
+        markersGroup.clearLayers();
+        let bounds = [];
+
+        data.forEach((item, index) => {
+            let wa = item.phone ? String(item.phone).replace(/[^0-9]/g, '') : '';
+            if (wa.startsWith('8')) wa = '62' + wa;
+
+            const row = document.createElement('div');
+            row.className = 'tps-row';
+            row.innerHTML = `
+                <div class="tps-idx">${index + 1}.</div>
+                <div class="tps-info">
+                    <div class="tps-name">${item.name}</div>
+                    <div class="tps-address">${item.address}</div>
+                    <div class="tps-loc">Kec. ${item.kec} - Kel. ${item.kel}</div>
+                </div>
+                <div>
+                    ${wa ? `<a href="https://wa.me/${wa}" target="_blank" class="btn-wa">Hubungi via WA</a>` : ''}
+                </div>
+            `;
+            container.appendChild(row);
+
+            if (item.lat && item.lon) {
+                const marker = L.marker([item.lat, item.lon], { icon: customIcon });
+                marker.bindPopup(`
+                    <strong>${item.name}</strong><br>
+                    ${item.address}<br>
+                    <small>Kec. ${item.kec}, Kel. ${item.kel}</small>
+                `);
+                markersGroup.addLayer(marker);
+                bounds.push([item.lat, item.lon]);
+            }
+        });
+
+        if (bounds.length > 0) {
+            map.fitBounds(bounds, { padding: [20, 20] });
+        }
+    }
+
+    document.getElementById('select-kecamatan').addEventListener('change', () => {
+        updateKelurahanDropdown();
+        filterData();
+    });
+
+    window.onload = () => {
+        initMap();
+        initDropdowns();
+        filterData();
+    };
+</script>
+</body>
+</html>
